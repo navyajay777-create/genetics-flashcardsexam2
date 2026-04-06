@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genetics Exam 2 Flashcards</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f3ee; --surface: #ffffff; --surface2: #f0ede6;
+    --text: #1a1814; --text2: #6b6560; --text3: #a09890;
+    --accent: #2d5a3d; --accent-light: #e8f0ea;
+    --warn: #8b5e00; --warn-light: #fdf3dc;
+    --border: #e2ddd6; --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --locked: #c8c4be;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  header { background: var(--accent); color: #fff; padding: 1.1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+  .header-title { font-family: 'DM Serif Display', serif; font-size: 1.25rem; }
+  .header-sub { font-size: 0.78rem; opacity: 0.75; margin-top: 2px; }
+  .main { max-width: 800px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+  /* Lecture tabs */
+  .lecture-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.1rem; }
+  .tab-btn { padding: 5px 11px; font-size: 12px; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text2); cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab-btn:hover:not(.active) { background: var(--surface2); }
+
+  /* Chunk selector row */
+  .chunk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .chunk-label { font-size: 12px; color: var(--text2); font-weight: 500; white-space: nowrap; }
+  .chunk-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chunk-pill { display: flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 12px; font-family: 'DM Sans', sans-serif; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; transition: all 0.15s; font-weight: 500; }
+  .chunk-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .chunk-pill.done { background: var(--accent-light); color: var(--accent); border-color: #b8d4be; }
+  .chunk-pill.locked { background: var(--surface2); color: var(--locked); border-color: var(--border); cursor: not-allowed; }
+  .chunk-pill .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+  .chunk-pill.done .pill-dot { opacity: 1; }
+  .chunk-pill.locked .pill-dot { display: none; }
+  .chunk-pill .lock-icon { font-size: 10px; }
+
+  /* Stats */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 0.9rem; }
+  .stat-card { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; text-align: center; box-shadow: var(--shadow); }
+  .stat-num { font-size: 1.4rem; font-weight: 600; }
+  .stat-num.green { color: var(--accent); } .stat-num.amber { color: var(--warn); }
+  .stat-label { font-size: 10px; color: var(--text3); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .progress-wrap { height: 4px; background: var(--surface2); border-radius: 2px; margin-bottom: 1.1rem; overflow: hidden; }
+  .progress-fill { height: 4px; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* Nav and card */
+  .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.8rem; }
+  .nav-btn { padding: 7px 15px; font-size: 13px; font-family: 'DM Sans', sans-serif; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); cursor: pointer; transition: all 0.15s; }
+  .nav-btn:hover:not(:disabled) { background: var(--surface2); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn.shuffle { color: var(--text2); font-size: 12px; }
+  .card-progress { font-size: 13px; color: var(--text2); font-weight: 500; }
+  .card-area { perspective: 1200px; margin-bottom: 0.9rem; }
+  .flashcard { width: 100%; min-height: 220px; position: relative; transform-style: preserve-3d; transition: transform 0.48s cubic-bezier(0.4,0,0.2,1); cursor: pointer; }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .card-face { position: absolute; width: 100%; min-height: 220px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 14px; border: 1px solid var(--border); padding: 1.75rem 1.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: var(--surface); box-shadow: var(--shadow); }
+  .card-back { transform: rotateY(180deg); background: #fafff9; border-color: #c8dece; }
+  .card-tag { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 0.75rem; }
+  .card-front .card-tag { color: var(--accent); opacity: 0.75; }
+  .card-back .card-tag { color: var(--accent); }
+  .card-q { font-family: 'DM Serif Display', serif; font-size: 1.15rem; line-height: 1.5; color: var(--text); }
+  .card-a { font-size: 13.5px; line-height: 1.75; color: var(--text); max-width: 580px; text-align: left; }
+  .tap-hint { font-size: 11px; color: var(--text3); margin-top: 1rem; }
+  .feedback-row { display: flex; gap: 8px; margin-bottom: 0.4rem; }
+  .fb-btn { flex: 1; padding: 9px; font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; border-radius: 10px; border: 1px solid; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .fb-btn:active { transform: scale(0.97); }
+  .fb-know { background: var(--accent-light); color: var(--accent); border-color: #b8d4be; }
+  .fb-know.marked { background: var(--accent); color: #fff; }
+  .fb-still { background: var(--warn-light); color: var(--warn); border-color: #e8d09a; }
+  .fb-still.marked { background: var(--warn); color: #fff; }
+
+  /* Chunk complete banner */
+  .chunk-complete { background: var(--accent-light); border: 1px solid #b8d4be; border-radius: 12px; padding: 1.25rem 1.5rem; text-align: center; }
+  .chunk-complete h3 { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--accent); margin-bottom: 0.4rem; }
+  .chunk-complete p { font-size: 13px; color: var(--text2); margin-bottom: 1rem; }
+  .chunk-complete-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .cc-btn { padding: 8px 18px; font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; border-radius: 8px; border: 1px solid; cursor: pointer; transition: all 0.15s; }
+  .cc-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .cc-btn.primary:hover { opacity: 0.88; }
+  .cc-btn.secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .cc-btn.secondary:hover { background: var(--surface2); }
+
+  /* Mini progress dots */
+  .dot-row { display: flex; gap: 5px; justify-content: center; margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .dot.seen { background: var(--warn); }
+  .dot.know { background: var(--accent); }
+  .dot.current { background: var(--text2); outline: 2px solid var(--text2); outline-offset: 1px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="header-title">Genetics Exam 2 — Flashcards</div>
+    <div class="header-sub" id="hdr-sub">7 Lectures · Loading...</div>
+  </div>
+</header>
+<div class="main">
+  <div class="lecture-tabs" id="tabs"></div>
+  <div class="chunk-row">
+    <span class="chunk-label">Chunk:</span>
+    <div class="chunk-pills" id="chunk-pills"></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-num" id="s-total">0</div><div class="stat-label">In chunk</div></div>
+    <div class="stat-card"><div class="stat-num green" id="s-know">0</div><div class="stat-label">Know it</div></div>
+    <div class="stat-card"><div class="stat-num amber" id="s-study">0</div><div class="stat-label">Studying</div></div>
+  </div>
+  <div class="progress-wrap"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+  <div class="dot-row" id="dot-row"></div>
+  <div id="main-content"></div>
+</div>
+
+<script>
+const CHUNK_SIZE = 5;
+
+const LECTURES = {
+
+"Lec 10: Chromatin & Chromosomes": [
+  {q:"What is supercoiling and what enzyme mediates it?", a:"DNA is a double helix that coils further on itself (supercoiled) so it fits into the small nucleus. Topoisomerase mediates the relaxing of DNA. Gyrase adds or removes turns to create positive or negative supercoils."},
+  {q:"What is positive supercoiling vs. negative supercoiling?", a:"Positive: DNA is overrotated (turns added), tightening it into tighter coils. Gyrase adds two turns; when released, DNA supercoils positively (strand rotates clockwise/left). Negative: DNA is underrotated (turns removed), spinning on itself less. Gyrase removes two turns → negative coil in the other direction."},
+  {q:"What is the nucleoid region in prokaryotes?", a:"Prokaryotes have no nucleus — DNA sits in the cytoplasm in the nucleoid region. DNA-binding proteins anchor DNA to a location in the cell membrane. DNA forms loop domains, each of which is supercoiled. DNA-binding proteins compact and organize DNA, keeping it bound to the nucleoid region."},
+  {q:"What is gyrase and what does it do?", a:"Gyrase is the enzyme responsible for rotating bacterial DNA. It can add two turns (causing positive supercoiling when released) or remove two turns (causing negative supercoiling). Most bacterial circular DNA can be relaxed or in either supercoiled configuration."},
+  {q:"What is a plasmid? How does it differ from genomic DNA?", a:"A plasmid is a small, circular piece of DNA that replicates independently from the bacterium. It is NOT genomic DNA — it does not contain genes essential for life. Plasmids replicate at a slower rate (fewer errors). They contain resistance factors (e.g., ampicillin resistance) or fertility factors for conjugation."},
+  {q:"How are plasmids introduced and transferred between bacteria?", a:"Transformation: a piece of DNA is transferred directly into a cell. Conjugation: a cell with a plasmid establishes a conjugation tube (bridge) using proteins encoded by the F (fertility) factor, and transfers the plasmid to a non-plasmid-bearing bacterium. The new bacterium then has both the proteins and the F factor."},
+  {q:"What are resistance factors and fertility factors on plasmids?", a:"Resistance factors: proteins that protect bacteria against antibiotics (e.g., ampicillin resistance carried on plasmid). Fertility factors: proteins that enable bacteria to engage in conjugation with other bacteria more effectively. Neither is essential for survival — that is the role of genomic DNA."},
+  {q:"What is a nucleosome? What is a chromatosome?", a:"Nucleosome: DNA wrapped approximately 2.4 turns around a cluster of 8 histone proteins. Linker DNA connects nucleosomes and is susceptible to DNA sensitivity/segregation. Chromatosome: a nucleosome PLUS histone H1, which locks the DNA around the 8 histones. H1 is an anchor protein — not one of the 8 core histones. Scaffold proteins keep the coils of chromatosomes together."},
+  {q:"What is chromatin and what allows gene expression?", a:"Chromatin = the combination of DNA and proteins (histones). For a gene to make mRNA, histones must loosen their grip on the DNA. Chromosomal puff = a highly expressed region that is relaxed (not supercoiled). Chromatin must relax for transcription to occur."},
+  {q:"What are the 4 types of eukaryotic chromosomes based on centromere position?", a:"Metacentric: centromere directly in the center (equal P and Q arms). Submetacentric: centromere slightly off center. Acrocentric: very long Q arm, short P arm — centromere near top; contains highly repetitive tRNA sequences. Telocentric: no P arm at all — centromere at the very top attached only to the Q arm."},
+  {q:"What are polycentric chromosomes?", a:"Some organisms (e.g., C. elegans) have chromosomes with centromeres distributed along the entire chromosome, not at one point. Spindle fibers attach all along the chromosome during cell division, rather than at a single centromere point as in humans."},
+  {q:"What is the centromere's molecular structure and function?", a:"Centromere = a repeated DNA sequence (spans thousands of bp, unique per organism; e.g., Saccharomyces cerevisiae has two flanking repeat sequences). Acts as a signal/consensus sequence for proteins to bind. Histone H3 variant CENH3 recognizes centromere repeat sequences and recruits kinetochore proteins. CENP-A is the outer layer that binds to H3. Kinetochore proteins attach to microtubules that pull chromatids apart during anaphase."},
+  {q:"What is the kinetochore and how does it work during anaphase?", a:"Kinetochore = proteins that bind at the centromere sequence. They are capable of binding microtubules (spindle fibers). During anaphase, microtubules are lined up in the middle with chromosomes attached to kinetochores. Dynein sits on spindle fibers, binds to microtubule ends, and promotes movement — pulling chromosomes apart. Microtubules move chromosomes to opposite poles."},
+  {q:"What are telomeres, the T-loop, and shelterin?", a:"Telomeres = repeat sequences at chromosome ends. After each replication, they get smaller. One strand projects beyond the other (overhang). The T-loop = the projecting strand flips back onto itself forming a tight loop, capping the end so the single strand is no longer exposed. Shelterin = a multi-protein complex (like a donut) that sits around the T-loop, keeps it stabilized, and prevents repair enzymes from treating it as damage."},
+  {q:"What is euchromatin vs. heterochromatin and the position effect?", a:"Euchromatin: less condensed (still supercoiled), genes in this region are mostly active — greater gene expression. Heterochromatin: even more condensed than euchromatin, typically around the centromere — genes are usually inactive, less expression. Position effect: moving a gene close to a heterochromatic region via inversion or translocation silences it. Moving it to a euchromatic region increases expression."},
+  {q:"What is a karyotype? Give specific examples.", a:"A karyotype describes individual chromosome status: total number, sex chromosomes, any abnormalities — separated by commas. Examples: 46,XY = normal male. 47,XY,+21 = male with Down syndrome (extra chromosome 21). 45,X = female with Turner syndrome (missing one X). 45,XY,−6 = male missing one chromosome 6. Ordered largest to smallest; G-banding gives each arm a unique black/white/grey band pattern."},
+  {q:"How is G-banding performed and what does it reveal?", a:"Cells grown in culture; special additives halt mitosis in metaphase (chromosomes most condensed). Culture dropped on glass — cells burst and chromosomes spread (metaphase spread). Chromosomes treated with enzymes that partially digest chromatin proteins, then stained with Giemsa dye (dark blue-black). A-T rich regions stain darker (less H-bonding, dye enters spaces). Each chromosome arm has a unique thick/thin pattern. Most centromeric band = 11:1; numbers increase toward telomere. Allows detection of inversions, deletions, insertions."},
+  {q:"What is aneuploidy vs. euploidy? Define all subtypes.", a:"Euploid = wild-type (normal) number of chromosomes. Aneuploidy = NOT the standard number. Subtypes: Nullisomy = 0 copies of a specific chromosome. Monosomy = 1 copy. Disomy = 2 copies (normal for humans). Trisomy = 3 copies. Tetrasomy = 4 copies."},
+  {q:"What is polyploidy? Define all subtypes.", a:"Polyploidy = having one or more extra FULL sets of chromosomes. Haploid (n) = one set. Diploid (2n) = two sets (normal human). Triploid (3n) = three sets. Tetraploid (4n) = four sets. Note: triploidy occurs in about 10% of spontaneous abortions in humans."},
+  {q:"What are P arm vs. Q arm and how are chromosome bands numbered?", a:"P arm = shorter arm (P for petite). Q arm = longer arm. Chromosome 1 = largest autosome; chromosome 22 = smallest. Band numbering: both P and Q arm numbers increase as you move from the centromere toward the telomere. Most centromeric band = 11:1. Markers allow localization of specific genes."},
+],
+
+"Lec 11: Cytogenetics": [
+  {q:"What are the 6 types of chromosomal rearrangements?", a:"1. Deletions, 2. Duplications, 3. Insertions (nonreciprocal translocations), 4. Reciprocal translocations, 5. Robertsonian translocations, 6. Inversions."},
+  {q:"What is a deletion and why is it harmful? What is pseudodominance?", a:"Deletion = loss of a chromosomal segment. If centromere is deleted, the chromosome is likely lost in the next cell division (kinetochore can't attach). Causes abnormal phenotypes via: (1) Pseudodominance: loss of the dominant allele exposes the recessive allele as the only allele — recessive trait appears even in heterozygote. (2) Haploinsufficiency: two copies normally make 100% of protein (50%+50%). Losing one copy means only 50% protein — not enough for normal phenotype."},
+  {q:"What are the 3 types of duplications? Give sequence examples.", a:"Tandem duplication: segment inserted right next to itself (side by side). Ex: ABCDEFGDE. Displaced duplication: inserted at a different location on the same chromosome but not adjacent. Ex: ABCDEFGDE. Reversed (inverted) duplication: inserted in reverse order. Ex: ABCDEFGED. Duplications occur in ~4% of human genomes, affecting regions up to 100 kb (100,000 bp). They may not affect the organism immediately but can affect offspring."},
+  {q:"What is a nonreciprocal translocation (insertion)?", a:"A segment of DNA is taken from one chromosome and inserted into a non-homologous chromosome — with NO reciprocal exchange. Example: chromosome 4 inserts a piece into chromosome 20. Also called an insertion. Contrasts with reciprocal translocation where both chromosomes exchange segments."},
+  {q:"What is a reciprocal translocation? Balanced vs. unbalanced?", a:"Reciprocal translocation: two non-homologous chromosomes break and exchange segments with each other (not necessarily the same size). Balanced: no DNA lost — one gives 100 nucleotides, other gives back 50 — as long as none are digested at the breakpoints. May have normal phenotype if no gene is disrupted. Unbalanced: DNA is lost at one or both breakpoints (enzymes at junction digest nucleotides). More likely to produce abnormal phenotype. Breaks in the middle of a gene split the gene into two parts, disrupting its function (gene A disturbed)."},
+  {q:"What is the position effect in reciprocal translocations?", a:"When a normally active gene is moved close to a heterochromatic region by translocation — the gene is silenced. Alternatively, an overexpressed gene moved to a condensed region decreases in expression. The location of a gene relative to euchromatin/heterochromatin determines its expression level."},
+  {q:"How can balanced reciprocal translocations produce unbalanced gametes?", a:"During meiosis, chromosomes must pair and segregate. With a balanced translocation, 4 gamete types are possible: (1) two normal chromosomes = balanced. (2) two derivative chromosomes = balanced. (3) one normal + one derivative = UNBALANCED gamete. Two of the four gametes are unbalanced → leads to abnormal offspring. Know the diagram showing all 4 outcomes."},
+  {q:"What is a Robertsonian translocation? How is it written?", a:"Results from fusion of two acrocentric chromosomes (chromosomes 13, 14, 15, 21, or 22) at their centromeres. The short p arms (which contain mostly rRNA genes) are lost. Results in 45 chromosomes total but can be phenotypically normal if p arm material is not all lost. Written as: 45,XY,rob t(13q;14q) or 45,XY,t(13;14)(q11;q11). The two q arms become elongated. 45 instead of 46 — one chromosome is 'lost' because two fused into one."},
+  {q:"How can a Robertsonian translocation cause trisomy/Down syndrome?", a:"The Robertsonian chromosome contains two fully functioning chromosomes but only one centromere — recognized as one chromosome. During Meiosis I, a gamete receives the Robertsonian chromosome AND also pulls in a normal copy of one of the fused chromosomes → gamete is disomic (has 2 copies). Upon fertilization with a normal gamete → trisomy. Example: Rob t involving chromosome 21 = trisomy 21 (Down syndrome). Robertsonian translocation is a more common cause of Down syndrome than standard nondisjunction."},
+  {q:"What is an inversion? Pericentric vs. paracentric?", a:"Inversion: a chromosomal segment is flipped 180 degrees. Pericentric: breakpoints lie on EITHER SIDE of (or include) the centromere — centromere is within the inverted segment. Paracentric: BOTH breakpoints lie within the SAME chromosome arm — centromere is NOT included. Unbalanced inversion: DNA may be lost at breakpoints → abnormal phenotype. Balanced inversion: no DNA lost, but breakpoints may split a gene in half, or position effect may silence a gene."},
+  {q:"What is nondisjunction and what gametes does it produce in Meiosis I vs. II?", a:"Nondisjunction = failure of chromosomes or sister chromatids to separate properly. Meiosis I failure (homologs don't separate): produces 2 TRISOMIC gametes (2n+1) and 2 MONOSOMIC gametes (2n-1) — ALL four gametes are abnormal. Meiosis II failure (one chromosome separates, other doesn't): produces 2 NORMAL diploid (2n), 1 TRISOMIC (2n+1), and 1 MONOSOMIC (2n-1) — two normal and two abnormal."},
+  {q:"What is mosaicism and what causes it?", a:"Mosaicism: when nondisjunction occurs during MITOSIS as a somatic mutation — only a SUBSET of the individual's cells carry the abnormal chromosome number. All people are mosaics — everyone has some somatic mutations. Different from germline nondisjunction which affects all cells."},
+  {q:"Why does nondisjunction frequency increase with maternal age?", a:"Older oocytes have a REDUCED ABILITY TO RECOMBINE during prometaphase I. This reduced recombination leads to increased frequency of nondisjunction. Example: older mothers are significantly more likely to give birth to children with Down syndrome (trisomy 21) than younger mothers."},
+  {q:"Which trisomy produces viable human offspring and why is this unique?", a:"Only trisomy 21 (Down syndrome) produces viable human offspring — all other autosomal trisomies are too lethal. This is unique to humans — other organisms (e.g., Jimson weed with 12 chromosomes) have many viable trisomies, each producing a distinct phenotype (different capsule shapes for each trisomy)."},
+  {q:"What is autopolyploidy vs. allopolyploidy?", a:"Autopolyploidy: ALL extra chromosomes come from the SAME species. Results from wholesale nondisjunction — all chromosome pairs fail to separate; both members go to same daughter cell. Cell tries to replicate but fails to divide → individual has twice the chromosomes. Allopolyploidy: individual inherits chromosomes from TWO DIFFERENT species (species must be similar enough for egg and sperm to be compatible). Polyspermy (fertilization by >1 sperm) also causes polyploidy — occurs in ~2-3% of pregnancies → spontaneous miscarriage."},
+  {q:"What is FISH and how does it work step by step?", a:"FISH = Fluorescence In Situ Hybridization. Relies on complementary sequences binding to each other. Steps: (1) Grow cells in culture; halt mitosis in metaphase (chromosomes most dense/visible). (2) Drop culture onto glass slide — cells and nuclei burst, chromosomes spill out (metaphase spread). (3) Denature chromosome DNA (make single-stranded). (4) Incubate with single-stranded fluorescent probe that hybridizes to complementary target. (5) View under fluorescence microscope. Used to detect deletions, duplications, and extra chromosomes."},
+],
+
+"Lec 12: Cell Cycle, Mitosis & Meiosis": [
+  {q:"What happens in each phase of the cell cycle? What is G0?", a:"G1: stockpile nucleotides, ATP, enzymes for DNA replication (DNA polymerase, gyrase, ligase). S phase: DNA replication — single strand becomes X structure (two sister chromatids). G2: synthesize microtubules (bind kinetochore fibers) and other proteins for cell division; stockpile ATP and enzymes for mitosis. M: mitosis or meiosis. G0: if cell lacks growth factors, nutrients, or necessary molecules in G1, rather than undergoing apoptosis it enters G0 — a frozen state where all functions and dividing stop."},
+  {q:"What is the G1 checkpoint and what does it check?", a:"At the END of G1, the cell checks that it has stockpiled ALL enzymes needed to replicate DNA (DNA polymerase, ligase, gyrase) before entering S phase. If G1 is not complete, cell does not proceed. Checks: Are all enzymes present and plentiful?"},
+  {q:"What is MPF? When is it active vs. inactive?", a:"MPF = Mitosis-Promoting Factor. Required to enter M phase. Activated by DEPHOSPHORYLATION (phosphate group removed). When phosphate is attached = INACTIVE. Without phosphate = ACTIVE (forces cell into division). Normally inactive when cell is not dividing. If DNA is damaged, MPF is kept inactive and cell is halted. Cells also check telomere length — if telomere is too short it enters genetic material → cell must decide if it can divide; if telomere is completely gone → must undergo apoptosis."},
+  {q:"What is the metaphase checkpoint?", a:"During mitosis AND meiosis, after chromosomes align at the equatorial plate — cell checks that EVERY kinetochore is bound by a spindle fiber. If kinetochores are not effectively bound to microtubules → chromosomes won't be in the center → inhibits MPF activation → cell halted in mitosis/meiosis. Ensures proper alignment before anaphase (cell division)."},
+  {q:"What is apoptosis and what triggers it?", a:"Apoptosis = programmed cell death. Occurs when cell FAILS to correct problems detected at checkpoints. Membrane forms 'blips' (folds/blebs) — visible sign of unhealthy cell. Cell turns on genes that induce apoptosis. Prevents damaged or chromosomally abnormal cells from dividing."},
+  {q:"What are the 5 stages of M phase in mitosis?", a:"1. Prophase: chromosomes condense. 2. Prometaphase: nuclear envelope breaks down, spindle forms. 3. Metaphase: sister chromatids lined up at equatorial plate, centromeres contacted by spindle fibers. 4. Anaphase: separase degrades cohesin; microtubules pull sister chromatids to opposite poles. Dynein pulls spindle fibers. 5. Telophase: nuclear envelope reforms; cytokinesis occurs — cytoplasm and organelles divided between two daughter cells."},
+  {q:"What is the difference between homologous chromosomes and sister chromatids?", a:"Homologous chromosomes: one from mom (via egg) and one from dad (via sperm). Both have centromere. Code for the SAME genetic traits but do NOT have identical sequences. Present as linear single molecules in G1 (interphase). Sister chromatids: produced after S phase DNA replication. TWO IDENTICAL copies of one chromosome — identical genetic sequence. Connected at centromere. After S phase: one chromosome = two sister chromatids (one DNA molecule → two identical copies)."},
+  {q:"What is cohesin, separase, and what happens if they malfunction?", a:"Cohesin: a glue-like protein complex that holds sister chromatids together. Keeps chromosomes unified as cell undergoes changes — doesn't drive chromosomes apart prematurely. Separase: enzyme that degrades cohesin during anaphase so sister chromatids can be pulled apart. Malfunction: if separase doesn't work well → nondisjunction — both chromosomes go to the same side."},
+  {q:"What is the relationship between chromosomes, chromatids, and DNA molecules?", a:"Number of chromosomes = number of centromeres. Each chromatid = one separate DNA molecule. So after S phase: one chromosome = two sister chromatids = two DNA molecules held together at ONE centromere. During anaphase, when sister chromatids separate: they go from ONE chromosome to TWO chromosomes (two centromeres). Example: cell with 4 chromosomes in metaphase → 8 chromosomes in anaphase (after separation)."},
+  {q:"What are the key differences between mitosis and meiosis in outcome?", a:"Only spermatogonia and oogonia undergo meiosis — all other cells undergo mitosis. Mitosis: produces 2 IDENTICAL DIPLOID (2n) daughter cells. Meiosis: produces 4 HAPLOID (n) daughter cells, each genetically unique. Meiosis I: homologous chromosomes separate (2n → n) — reduction division. Meiosis II: sister chromatids separate (n → n) — equational division. Cohesin keeps chromosomes together until proper stage; recombination shuffles maternal/paternal alleles."},
+  {q:"What are the 5 stages of Prophase I and what happens in each?", a:"1. Leptotene: chromatin condenses into two fine threads (homologous chromosomes). 2. Zygotene: homologs recognize each other, begin to align; synaptonemal complex starts forming; 4 chromatids from 2 chromosomes = bivalents. 3. Pachytene: synaptonemal complex fully develops (zipped); physical crossing over occurs at 1-2 places on P or Q arm. 4. Diplotene: synaptonemal complex dissolves at chiasmata; genetic material exchanges complete; chromosomes begin to separate. 5. Diakinesis: chromatin fully condenses; bivalent chromosomes separate — only joined at their ends."},
+  {q:"What is prometaphase I in terms of Prophase I stages?", a:"Prometaphase I CORRESPONDS TO pachytene, diplotene, and diakinesis stages of Prophase I. This is where homologous recombination fully occurs. Steps: (1) Original chromosomes pair in spermatogonium or oogonium. (2) Homologous chromosomes line up — 2 of the 4 chromatids cross over. (3) After crossing over, two parts are attached opposite — this is recombination, NOT translocation (it involves similar/homologous chromosomes). (4) After meiosis II: 4 haploid cells — 2 non-recombinant + 2 recombinant."},
+  {q:"What happens at Metaphase I and Anaphase I?", a:"Metaphase I: bivalents (tetrads) align along the equatorial plane. Spindle fibers connect to chromosomes via kinetochores at centromeres. Cell checks that every chromatid is bound by a spindle fiber. Anaphase I: enzyme separase degrades the cohesin holding homologous chromosomes together (NOT the centromeric cohesin). Sister chromatids REMAIN connected — cohesin between them is protected by Shugoshin."},
+  {q:"What is Shugoshin and how does it work?", a:"Shugoshin = protein that protects cohesin ONLY AT CENTROMERES from degradation by separase. During Anaphase I: cohesin breaks down everywhere EXCEPT at centromeres (Shugoshin is there). This holds sister chromatids together at their centromeres through Anaphase I and into Meiosis II. Shugoshin MUST be degraded during Metaphase II so sister chromatids can separate in Anaphase II. Shugoshin stays connected at the centromere top between divisions."},
+  {q:"What is interkinesis?", a:"Interkinesis = the rest period between Meiosis I and Meiosis II. The nuclear membrane reforms, spindle fibers degenerate, and chromatin decondenses — cell breaks everything down and rebuilds. Cell regenerates its energy supply. NOT the same as interphase — no DNA replication occurs. Then Meiosis II begins (equational division)."},
+  {q:"What is reduction division vs. equational division?", a:"Reduction division = Meiosis I: reduces chromosome number by HALF (2n → n). Homologous chromosomes separate. Equational division = Meiosis II: NO change in chromosome number (n → n). Sister chromatids split — chromosome number stays the same. With 23 chromosome pairs, independent assortment alone gives 2^23 = 8,388,608 possible combinations."},
+  {q:"How do spermatogenesis and oogenesis differ in timing and products?", a:"Spermatogenesis: begins at puberty; men generate sperm continuously forever. Produces 4 viable sperm from one primary spermatocyte. Oogenesis: primary oocytes begin meiosis from 7 months gestation to shortly after birth — STOP at diplotene of Prophase I. Meiosis resumes at puberty — a handful of oocytes resume each month — STOP at Metaphase II. Meiosis II completes ONLY AFTER fertilization. Produces 1 viable egg (receives all cytoplasm and organelles) + 3 polar bodies (die off). Sperm donates DNA and centromere; all cytoplasm/organelles come from the egg."},
+  {q:"What is gene conversion and how does it occur?", a:"During homologous recombination, a Holliday junction forms (single-strand break). DNA repair proteins recognize the junction as mismatched bases and use the INTACT STRAND as a template to make new DNA. Each mismatch → one strand is cut out. This converts one allele to the sequence of the other chromosome — non-Mendelian ratios result. Original model involves single-strand breaking. (Review textbook for exam.)"},
+],
+
+"Lec 13: Mendel's Laws & Heredity": [
+  {q:"Define: character, trait, allele, locus, genotype, phenotype.", a:"Character: an observable feature (e.g., flower color). Trait: a specific form of the character (e.g., yellow flowers). Allele: one of the two copies of a gene that an individual possesses; many different alleles of a gene exist in a population. Locus: a specific place in the DNA molecule (varies in length). Genotype: the specific alleles an individual has for one or more genes (e.g., Aa for gene A; BbTT for genes B and T). Phenotype: the observable characteristics of the individual (both visible and otherwise)."},
+  {q:"What is the difference between homozygous, heterozygous, and true-breeding?", a:"Homozygous genotype: both alleles for a particular gene are THE SAME (AA or aa). Heterozygous genotype: the two alleles for a particular gene are DIFFERENT from each other (Aa). True-breeding / pure-breeding: all offspring of an individual have the SAME trait — suggests the individual is homozygous for the alleles controlling that character."},
+  {q:"What is dominant vs. recessive? Give the Mendelian example.", a:"Dominant: allele that controls the phenotype in spite of the presence of another allele. If A is dominant over a, then AA and Aa produce the SAME phenotype. Recessive: allele that only controls phenotype when the individual is HOMOZYGOUS for it. The only way to exhibit the recessive phenotypic trait is to be aa."},
+  {q:"What are autosomal, X-linked, and Y-linked mutations?", a:"Autosomal mutations: mutations in genes that lie on the 22 numbered chromosomes (autosomes 1–22). X-linked mutations: mutations in genes on the X chromosome. Y-linked mutations: mutations in genes on the Y chromosome. These distinctions are critical for predicting inheritance patterns in pedigrees."},
+  {q:"What are the P, F1, and F2 generations?", a:"P generation: the FIRST generation mated (parental). F1 generation: first filial — first generation of offspring from the P cross. F2 generation: second filial — offspring produced by crossing F1 × F1."},
+  {q:"How are wild-type and variant alleles designated?", a:"Wild-type: the MOST COMMON allele found in wild populations; designated by the gene letters + a '+' sign (e.g., El+). Variant alleles: all other non-wild-type alleles for that gene (e.g., ElR = ear length restricted allele). A goat heterozygous for these alleles is written El+/ElR or +/ElR."},
+  {q:"What is the monohybrid cross? What are the genotypic and phenotypic ratios in F2?", a:"P generation: AA × aa → F1: all Aa (all dominant phenotype). F1 × F1: Aa × Aa → F2 genotypic ratio: 1 AA : 2 Aa : 1 aa. F2 phenotypic ratio: 3 dominant : 1 recessive. Of the 3 dominant: 1 AA (will produce all dominant offspring), 2 Aa (will each produce 3:1 ratio). The 1 recessive (aa) will produce all recessive offspring."},
+  {q:"What are Mendel's 4 principles illustrated by the monohybrid cross?", a:"1. Each gene has two different versions (alleles) — demonstrated by dominant and recessive traits. 2. One allele can be dominant over the other — F2 has both phenotypes, meaning F1 carried recessive allele even without showing it. 3. Each parent passes ONE allele to offspring — F1 heterozygous → F2 has both phenotypes. 4. Each individual inherits one set of alleles from MOTHER and one from FATHER."},
+  {q:"What does a testcross reveal? Give an example.", a:"A testcross crosses an individual of UNKNOWN genotype with a homozygous RECESSIVE individual (aa). If dominant phenotype individual is AA: all offspring are Aa (all dominant). If dominant phenotype individual is Aa: offspring are 50% Aa (dominant) and 50% aa (recessive). This reveals whether the unknown parent is homozygous or heterozygous dominant."},
+  {q:"What does a dihybrid cross demonstrate? What is independent assortment?", a:"Independent assortment: alleles from DIFFERENT genes segregate into gametes independently. Whether a gamete contains one allele OR another of gene A does NOT influence which allele of gene B ends up in that gamete. AaBb individual makes 4 equally likely gametes: AB, Ab, aB, ab. P: AABB × aabb → F1: AaBb → F2: 9:3:3:1 phenotypic ratio (9 both dominant : 3 first dominant only : 3 second dominant only : 1 both recessive)."},
+  {q:"What is the branch diagram approach for dihybrid crosses?", a:"Break the dihybrid cross into two independent monohybrid crosses. Calculate phenotypic ratio for each gene separately (e.g., ¾ dominant : ¼ recessive for Aa × Aa). Then multiply using the AND rule: P(both dominant) = ¾ × ¾ = 9/16. P(first dominant, second recessive) = ¾ × ¼ = 3/16. Etc. This gives 9:3:3:1."},
+  {q:"What is the AND rule (multiplication rule) and when do you use it?", a:"Use when events are INDEPENDENT and there is ONE specific way to get the outcome. Multiply the probability of each event together. Example: P(3 heads in a row) = ½ × ½ × ½ = ⅛. Example: P(child is aa) from two Aa parents = ½ × ½ = ¼. Rule of thumb: ONE way to get outcome = multiply."},
+  {q:"What is the OR rule (addition rule) and when do you use it?", a:"Use when events are MUTUALLY EXCLUSIVE and there are MULTIPLE ways to get the outcome. Add the individual probabilities. Example: P(exactly 3 boys OR 3 girls from 3 children): P(3 boys) = (½)³ = ⅛; P(3 girls) = ⅛; total = ¼. Rule of thumb: MULTIPLE ways to get outcome = add."},
+  {q:"What is the probability equation for multiple children? Give the Tay-Sachs example.", a:"For n total children with s affected and t unaffected: P = [n! / (s! × t!)] × P(affected)^s × P(unaffected)^t. Tay-Sachs example: Both parents Aa (A = normal, a = mutant). P(affected) = ¼. P(unaffected) = ¾. To get exactly 1 affected child out of 4: P = (4 choose 1) × (¼)¹ × (¾)³. To get 2 affected out of 5: P(affected) = 0.25 (s), P(unaffected) = 0.75 (q), N = 5 total."},
+  {q:"What is the chi-square (goodness-of-fit) test and how do you interpret it?", a:"Used to determine if deviations between OBSERVED and EXPECTED phenotypic ratios are due to chance or a real biological difference. Example: Mating two Aa heterozygotes (A = red wild-type, a = white mutant). Expected 3:1 ratio. Instead get 135 red and 65 white calves. Calculate χ² = Σ[(observed - expected)² / expected]. Null hypothesis: chance is responsible for the difference. Alpha (α) = 0.05. Degrees of freedom = number of phenotypes - 1 = 1. Critical value at α=0.05, df=1 = 3.841. If χ² > 3.841 → REJECT null. If χ² < 3.841 → SUPPORT null (difference is random)."},
+  {q:"What is a Punnett square and how is it used for a dihybrid cross?", a:"A Punnett square shows all possible genotype combinations in offspring. For a dihybrid cross (e.g., SY, Sy, sY, sy gametes from one parent): put the 4 gamete combinations from parent 1 across one side of a 4×4 grid and the 4 from parent 2 across the other side. Fill in the 16 boxes to show all possible genotypes. Then group phenotypes to get 9:3:3:1 ratio."},
+],
+
+"Lec 14: Pedigree Analysis": [
+  {q:"What is the difference between single-factor and multifactorial disorders?", a:"Multifactorial disorders: caused by a combination of MULTIPLE genetic factors (alleles of several critical genes, mutations, epigenetics) AND nongenetic factors (diet, environment, lifestyle). Example: pre-diabetic individuals — diet and lifestyle can determine whether they become diabetic. Most normal human traits and diseases are multifactorial. Single-factor (Mendelian) disorders: caused by disruption of ONE gene. Example: Tay-Sachs disease (single nucleotide change → permanently non-functional gene; children develop normally until age 2, die by age 4-5). Neurofibromatosis is another example."},
+  {q:"What is hemizygous and why does it matter for X-linked disorders?", a:"Hemizygous: an individual possesses only ONE copy of a chromosome (and thus one copy of all genes on it). Example: XY males for X-linked genes. If there is a disorder on the X chromosome, males only need a SINGLE mutation to be affected — there is no second copy to compensate. This is why X-linked recessive disorders affect males so much more frequently."},
+  {q:"What notation is used for mutations in pedigree analysis?", a:"N = normal allele; M = mutant allele. NN = mutation-free. NM = heterozygous carrier. MM = homozygous for mutation (has the disorder). For autosomal dominant: affected individuals are assumed to have NM genotype (very unlikely two affected individuals with AD disorder would mate). For X-linked: females have XnXn (normal), XnXm (heterozygous), or XmXm (affected). Males have XnY (normal) or XmY (hemizygous — will be affected)."},
+  {q:"What are all the pedigree symbols?", a:"Square = male. Circle = female. Diamond = sex unknown. Filled/colored = affected with trait. Dot or half-filled = heterozygous carrier for recessive trait (Aa). Diagonal line through symbol = deceased. Question mark = unknown history. Horizontal line between square and circle = mating. Dashed lines = adoptive parents; solid = biological. Twins = triangle branch (line in middle = identical twins). Double line between square and circle = consanguinity (mating between related individuals)."},
+  {q:"What is the pedigree numbering system?", a:"Each generation is given a Roman numeral (I, II, III, etc.). Each individual within a generation is numbered by ORDER OF BIRTH from left to right (1, 2, 3, etc.). Individual IV-5 = generation IV, fifth person in birth order."},
+  {q:"What are the 4 rules for identifying autosomal dominant inheritance?", a:"1. Every affected individual has AT LEAST ONE affected parent (affected NM × unaffected aa). 2. Expect HALF of an affected person's children to be affected (NM × NN = 50% NM). 3. Sons AND daughters affected with EQUAL FREQUENCY (autosomes, not sex chromosomes). 4. Two UNAFFECTED parents produce ONLY UNAFFECTED children. Lobster claw example: individuals with fused digits — has NM genotype; only ¼ chance child is affected."},
+  {q:"What are the 4 rules for autosomal recessive inheritance?", a:"1. An affected person CAN have unaffected parents (carriers: Aa × Aa → 25% aa). 2. Two affected parents produce ONLY affected children (aa × aa). Both have MM genotype. 3. Sons and daughters affected with EQUAL FREQUENCY. 4. Affected children can result from consanguinity (mating between relatives increases probability of both parents being carriers of rare recessive allele)."},
+  {q:"What are the 6 rules for X-linked recessive inheritance?", a:"1. Mutant gene is on the X chromosome. 2. Females need TWO mutant copies (XmXm) to be affected. 3. Males only have one X — need only ONE mutant X (XmY = hemizygous = affected). 4. Males are often the ONLY ones affected. 5. Affected male CANNOT pass to sons (son gets Y from dad, not X). 6. All daughters of affected males are CARRIERS (get Xm from dad). 7. Half the sons of a carrier female are affected; half the daughters of a carrier female are also carriers (if father is mutation-free)."},
+  {q:"What are the rules for X-linked dominant inheritance?", a:"No carriers and no skipping of generations. Both XmXn females and XmY males are AFFECTED. Affected male CANNOT have an affected SON (sons get Y from dad). Every affected male has an AFFECTED MOTHER (got Xm from mother). Why? Males only give daughters their X chromosome — so all daughters of an affected male receive Xm. Sons of an affected male receive Y chromosome, so they CANNOT be affected."},
+  {q:"What are Y-linked traits?", a:"Only MALES are affected. ALL affected males transmit the trait to ALL sons (Y is always passed to sons). Daughters are NEVER affected (get X from father, not Y). Very rare — most genes on Y are not critical."},
+  {q:"What is X-inactivation and how does it affect females with X-linked mutations?", a:"In early female development (~64-cell stage): each cell randomly decides to inactivate the X from mom OR the X from dad. Typically 50% inactivate each. All descendant cells inactivate the SAME X as their ancestor. Females have TWO populations of cells. If a female inherits a mutant X from mom (Xm): cells that inactivate mom's X → express dad's healthy X → healthy cells. Cells that inactivate dad's X → express mom's Xm → affected cells. In 5-10% of women, X-inactivation is SKEWED: if mutant X mostly inactivated → less affected even with dominant mutation. If normal X mostly inactivated → more severely affected even with recessive mutation."},
+  {q:"What is genetic heterogeneity?", a:"For SOME disorders, different families may exhibit DIFFERENT patterns of inheritance for the SAME disorder. This is because the disorder results from disruption of ANY one of several proteins in the SAME biological pathway. Example: 3-step reaction pathway makes compound D. Normal D = normal child; abnormal D = abnormal child. If enzyme 1 OR enzyme 2 OR enzyme 3 is mutated → abnormal D. Different enzymes may be encoded by genes on different chromosomes with different inheritance patterns."},
+  {q:"How do you calculate risk of a child being affected by a single-gene disorder?", a:"Step 1 — determine parental genotypes: NN → 0% chance of mutation. NM → 50% chance. MM → 100% chance. Step 2 — apply mode of inheritance: Autosomal dominant: child needs 1 mutant copy. Autosomal recessive: child needs 2 mutant copies (from BOTH parents). X-linked recessive: males need mutation from mother; females need mutation from BOTH parents. X-linked dominant: mutation can come from either parent; males need it from mother. Example: both parents NM autosomal recessive carriers → P(affected child) = ½ × ½ = 25%. If parent genotype unknown → use Hardy-Weinberg formula 2pq to calculate probability of being a carrier."},
+  {q:"What is the genotype/phenotype for 'lobster claw' and how does autosomal dominant work?", a:"Lobster claw = ectrodactyly: individuals have fused digits 1+2 and 3+4 — 3 individual fused units. Caused by autosomal dominant mutation. Affected individual has NM genotype. Cross: NM (affected) × NN (normal): offspring are 50% NM (affected) and 50% NN (unaffected). Only ¼ chance of being affected — very unlikely two affected AD individuals mate."},
+  {q:"What is the difference between how X-inactivation in 5-10% of women affects phenotype?", a:"In 5-10% of women, X-inactivation is SKEWED (very different from the typical 50/50). If cells predominantly inactivate the MUTANT X chromosome → woman is MUCH LESS AFFECTED even if she carries a dominant X-linked mutation. If cells predominantly inactivate the NORMAL X chromosome → woman is MORE SEVERELY AFFECTED even if her mutation is recessive."},
+],
+
+"Lec 15: Sex Determination": [
+  {q:"Define monoecious, dioecious, heterogametic, and homogametic.", a:"Monoecious ('one house'): one organism possesses BOTH male and female sex organs (hermaphrodite). Dioecious ('two houses'): each organism possesses ONE sex's organs (e.g., humans). Heterogametic: produces TWO DIFFERENT types of gametes with different sex chromosomes. Example: XY males produce X-bearing and Y-bearing sperm. ZW females in birds produce Z-bearing and W-bearing eggs. Homogametic: all gametes have the SAME sex chromosome content. Example: XX human females produce only X-bearing eggs."},
+  {q:"What is the XX-XO system in grasshoppers?", a:"Females: XX (two X chromosomes). Males: XO (ONE X chromosome, no Y chromosome — 'O' represents absence, not an actual chromosome). Males are heterogametic: produce X-bearing sperm vs. sperm with NO sex chromosome (represented as O in Punnett square). No Y chromosome exists in this system."},
+  {q:"How is sex determined in bees, wasps, and ants (haplodiploidy)?", a:"Bees have NO sex chromosomes — sex is determined by PLOIDY. Females = DIPLOID (fertilized egg: sperm + egg = 2n). Males = HAPLOID (unfertilized egg = n). Males produce sperm by MITOSIS (already haploid — copies and divides). Females produce eggs by MEIOSIS. Queen stores male sperm in a separate compartment; fertilizes some eggs (→ females) and leaves others unfertilized (→ males). Males die immediately after copulation. Son inherits ONE of the two alleles the mother possesses for every gene."},
+  {q:"What is the ZZ-ZW system and which organisms use it?", a:"Used in birds, snakes, butterflies, some amphibians, and some fish. Females: ZW (heterogametic — produce Z-bearing or W-bearing eggs). Males: ZZ (homogametic). This is the OPPOSITE of the XX-XY system — females are the heterogametic sex."},
+  {q:"What is the SRY gene? Where is it and what happens if it translocates?", a:"SRY (Sex-determining Region Y) = Testes Determining Factor (TDF). Located on the P arm of the Y chromosome, very close to (just BELOW) the pseudoautosomal region. X and Y chromosomes share pseudoautosomal regions (similar genetic material; do crossing over there). If crossing over occurs BELOW the pseudoautosomal boundary during spermatogenesis → SRY gene translocates onto the X chromosome. Result: XX individual with SRY on one X = develops as MALE (despite XX genotype). XY individual where Y lost SRY = develops as FEMALE (despite XY genotype). Mother provides X in egg; father's X (carrying SRY) → child is XX male."},
+  {q:"What are Turner Syndrome and Klinefelter Syndrome?", a:"Turner Syndrome: 45, X (female — has one X). Symptoms: does not go through puberty normally; smaller stature; webbed neck; chubby body type; some mild cognitive deficits; cardiovascular issues; sterile. Typically normal development until age 2. Normally females have two X chromosomes with one inactivated (70-80% inactivation). Klinefelter Syndrome: 47, XXY (male — has Y chromosome). Symptoms: gynecomastia (development of male breasts); somewhat female secondary sexual development; very low sex drive; sterile. Not all males show all symptoms."},
+  {q:"What is the Drosophila genic balance system? Memorize the table.", a:"In Drosophila, sex is determined by the RATIO of X chromosomes to HAPLOID sets of autosomes (X:A ratio), NOT the Y chromosome. Y chromosome does NOT determine sex (females can have a Y). Y acts like a sex chromosome during meiosis (X segregates away from it). X:A Ratio → Sex: 0–0.5 = Metamale (male phenotype, low viability/fertility). 0.5 = Male. 0.5–1.0 = Intersex (both male and female traits). 1.0 = Female. >1.0 = Metafemale (female phenotype, low viability/fertility). Fruit flies can be haploid, diploid, triploid, or tetraploid."},
+  {q:"How does environmental temperature determine sex in reptiles?", a:"Turtles: WARM temperature → FEMALE; COOL temperature → MALE. Alligators: COOL temperature → FEMALE; WARM temperature → MALE. Crocodiles also use temperature. Global warming concern: too many female turtles and too many male alligators could result from rising temperatures — potentially devastating for populations."},
+  {q:"How does sequential hermaphroditism work in slipper limpets?", a:"1. Larvae/eggs are deposited on hard surfaces — start as FEMALE. 2. Males get deposited ON TOP of her and reproduce. 3. Males on top switch sex — turn into FEMALES. 4. These new females attract new larvae to deposit on top of them (which become males). Sex is determined by POSITION — the top organism is male, the bottom is female. Social/positional cues determine sex changes."},
+  {q:"What did Thomas Hunt Morgan's white-eye fruit fly experiment demonstrate?", a:"Morgan (American biologist, ~1915) first demonstrated sex-linked inheritance. Cross: white-eye male (XwY) × red-eye female (XRXR). F1: all red eyes. F1 × F1 → F2: ALL females had red eyes; HALF males had red eyes, HALF had white eyes. Expected Mendelian ratio (if autosomal): ¼ red/red, ½ red/white, ¼ white/white (equal in males and females). Actual result: only MALES had white eyes in F2. Conclusion: eye color gene is on the X chromosome. X+ = red (wild-type dominant); Xw = white (recessive). This was NOT possible with autosomal inheritance."},
+  {q:"What is the reverse cross Morgan did and what did it show?", a:"Reverse cross: white-eye FEMALE (XwXw) × red-eye MALE (X+Y). Result: females became red-eyed (XwX+), males became white-eyed (XwY). This was the CRISS-CROSS pattern of inheritance — confirming X-linkage. Males inherited white from their mothers (got Xw from mom), not their fathers. This further confirmed the eye color gene was X-linked and recessive."},
+  {q:"What did Calvin Bridges observe about X-linked inheritance exceptions?", a:"Calvin Bridges observed that some white-eyed females would ONLY produce white-eyed offspring. He crossed a white-eyed female (who produced white-eyed offspring) with a red-eyed male. Bridges expected: all red-eyed females and all white-eyed males. The exceptions (unexpected offspring) were explained by rare X chromosome nondisjunction events — providing chromosomal evidence for the chromosome theory of inheritance."},
+  {q:"What is haplodiploidy in detail — how do male bees produce sperm?", a:"Males (drones) are haploid — they arise from UNFERTILIZED eggs. Because they are already haploid (n), they produce sperm by MITOSIS (not meiosis) — they simply copy their single set of chromosomes and divide. From every gene, a son inherits ONE of the TWO alleles his mother possesses. Females are diploid (2n) — arise from fertilized eggs; produced by meiosis. Queen flies and mates, receiving sperm from 7-8 males (males die immediately after ejaculation). Stores sperm to fertilize eggs selectively."},
+],
+
+"Lec 9: DNA Mutation & Repair": [
+  {q:"What is a wildtype sequence and what makes something a mutation?", a:"The wildtype is the most common (normal) sequence that allows a protein to function normally and fold properly. Any change in the DNA base sequence is called a mutation. Mutations can be helpful, neutral, or detrimental — they are not always bad. Some are silent (benign), and some can make a protein work even better than wildtype."},
+  {q:"How do mutation rates vary across organisms?", a:"Viruses have the HIGHEST mutation rate — they use RNA, which is less stable than DNA, and their small genomes allow them to survive many errors. DNA viruses have lower rates than RNA viruses. Eukaryotes have the lowest mutation rates. Bacteria fall in between."},
+  {q:"What is the difference between somatic and germline mutations?", a:"Somatic mutations: occur in non-reproductive cells (e.g., breast tissue). They can cause abnormalities like cancer in that tissue but are NOT automatically passed to offspring. The earlier a somatic mutation occurs, the more daughter cells carry it. Germline mutations: occur in cells that become gametes (eggs/sperm). These ARE passed to offspring, who will 100% carry the mutation — far more heritable and can be more devastating."},
+  {q:"What are the three basic types of gene mutations?", a:"1. Base substitutions: a single nucleotide is changed. Includes transitions (purine ↔ purine, or pyrimidine ↔ pyrimidine — less disruptive) and transversions (purine ↔ pyrimidine — more disruptive because the ring size changes). 2. Insertions and deletions (indels): adding or removing nucleotides; most dangerous when NOT in multiples of 3 because they cause frameshifts. Deleting exactly 3 nucleotides removes one amino acid but keeps the rest intact. 3. Expanding nucleotide repeats: repeated triplet sequences (e.g., CCG) expand over generations, causing instability."},
+  {q:"What is a frameshift mutation and why is it so harmful?", a:"Insertions or deletions of nucleotides NOT in multiples of 3 shift the entire reading frame downstream. Every codon after the mutation changes, producing a completely different (usually nonfunctional) protein. A premature STOP codon often appears. Deleting or inserting exactly 3 nucleotides avoids a frameshift — only one codon is affected. The exam tip: a 1-nucleotide deletion in the middle of exon 2 is the MOST deleterious option."},
+  {q:"What are expanding nucleotide repeats and what causes them? Give the Fragile X example.", a:"Trinucleotide repeats are areas on chromosomes with repeated 3-nucleotide sequences (e.g., CCG). They expand through strand slippage: the bottom strand physically slips and base-pairs with itself, forming a hairpin. DNA polymerase fills in the gap with MORE repeats. Fragile X syndrome: CCG repeats on X chromosome. Normal = ~50 repeats (normal phenotype). ~100 repeats = autism-like symptoms. ~250+ repeats = full Fragile X syndrome. Anticipation: each generation tends to get worse (more repeats)."},
+  {q:"What are forward, reverse, and suppressor mutations?", a:"Forward mutation: changes wild-type phenotype to a diseased/mutant phenotype. Reverse (back) mutation: reverts a diseased phenotype back to wild-type (same nucleotide changes back). Suppressor mutation: a SECOND mutation at a different site that neutralizes the first mutation and restores (rescues) the wild-type phenotype — but the genotype is NOT the same as the original wildtype (the individual is a double mutant)."},
+  {q:"What is an intragenic vs. intergenic suppressor mutation?", a:"Intragenic suppressor: the second (suppressor) mutation is within the SAME gene as the first mutation. The individual is a double mutant in gene A, but has a normal phenotype. Intergenic suppressor: the suppressor mutation is in a COMPLETELY DIFFERENT gene. Example: mutation 1 causes a STOP codon where there should be tyrosine. The suppressor mutation alters the anticodon of a tRNA so it reads the STOP codon and inserts tyrosine anyway. Important: intergenic suppressors affect two genes, so the secondary gene may be involved in multiple pathways — broad effects possible."},
+  {q:"What are silent, missense, and nonsense mutations?", a:"Silent mutation: DNA sequence changes but the amino acid does NOT change (due to codon degeneracy) — no effect on protein. Nonsense mutation: creates a premature STOP codon → truncated, nonfunctional protein. Missense mutation: changes one amino acid to a different one. Conservative missense: new amino acid is biochemically similar → protein may still function normally. Nonconservative missense: new amino acid is biochemically very different → likely disrupts protein function."},
+  {q:"What are gain-of-function, loss-of-function, conditional, and lethal mutations?", a:"Gain of function: mutation enhances or changes the protein's function. Often dominant. Loss of function: protein is made but cannot fold properly — nonfunctional. Typically recessive (need 2 mutant copies to see full loss). Conditional mutation: mutation's effect depends on environmental conditions. Example: Siamese cats — pigment gene is temperature-sensitive; cooler body parts (ears, tail) produce dark pigment. Lethal mutation: causes death of the organism. Single nucleotide changes can be lethal. Many miscarriages result from lethal mutations early in development."},
+  {q:"What did Barbara McClintock discover about transposable elements? (KNOW THIS)", a:"McClintock discovered that genes can physically move ('jump') within the genome — she called them jumping genes or transposable elements. In corn: a transposable element inserted into the middle of the purple pigment gene disrupted it → white kernels. When the element jumped back OUT, pigment was restored → purple kernels. Large purple domains = element jumped out early (more time for pigment to develop). Small purple speckles = element jumped out late (less time). This was the first evidence of genomic sequences that can relocate."},
+  {q:"What is the molecular structure of a transposon and how does transposition work?", a:"A transposon is a DNA fragment flanked by inverted repeats (e.g., ACTG on one end, CAGT on the other). In the middle is the transposase gene. Transposase enzyme: (1) recognizes the inverted repeats, (2) makes staggered cuts in the DNA, (3) excises the transposon, (4) inserts it at a new location. The staggered cuts leave single-stranded overhangs; DNA polymerase fills these in → creates direct flanking repeats on both sides of the new insertion site."},
+  {q:"What is the Ac-Ds system in corn?", a:"Ac (Activator) element: a complete transposon — has inverted repeats AND the transposase gene. Can transpose on its own. Ds (Dissociation) element: has inverted repeats but NO transposase gene. Cannot transpose alone — must borrow transposase from the Ac element. When Ds is inside the pigment gene → no pigment (white). When transposase from Ac recognizes Ds's inverted repeats and excises it → pigment gene restored → purple. This system was used to prove transposition."},
+  {q:"What are retrotransposons and how do they differ from DNA transposons?", a:"Retrotransposons use a copy-and-paste mechanism via an RNA intermediate. Steps: transposable element is transcribed → RNA → reverse transcriptase converts RNA back into DNA → new DNA copy is inserted into a new chromosomal location. The original element STAYS in place; a new copy is inserted elsewhere. This contrasts with DNA transposons (cut-and-paste: element is excised then inserted). Retrotransposons rely on reverse transcriptase (like retroviruses)."},
+  {q:"How can transposable elements disrupt gene function without inserting INTO a gene?", a:"A transposable element can insert into the PROMOTER region (just before a gene) and block RNA polymerase from binding → gene cannot be transcribed → no protein made. Example: grape pigment gene (VvmybA1, makes anthocyanin). A transposable element sits right before the gene in the promoter region → white grapes. When the element is removed, it takes the inverted repeats with it but leaves behind the flanking direct repeats → polymerase can bind again → red/purple grapes."},
+  {q:"How can transposable elements cause chromosome rearrangements?", a:"When TWO equivalent transposable element sequences exist on the same chromosome, the chromosome can fold so the two sequences align and undergo homologous recombination with each other. This can result in: (1) Deletion: the looped-out segment between the two elements is deleted as a circular piece. (2) Inversion: if the chromosome crosses over differently, the segment between elements flips 180 degrees. (3) Translocation: a segment deleted from one chromosome can be inserted into a different chromosome. (4) Duplication: a chromosome can gain an extra copy of a segment."},
+  {q:"What are the main types of mutagens and how do they work?", a:"Base analogs: mimic normal bases and get incorporated into DNA, but pair incorrectly → transitions. Alkylating agents (e.g., EMS): add methyl/ethyl groups to bases (e.g., guanine) → pairs with wrong base. Deamination: removes amino groups, changing the base identity → mispairing (repaired by base excision). Intercalating agents: insert between base pairs, confusing DNA polymerase → unnecessary insertions/deletions. Oxidative agents: reactive nitrogen/oxygen species damage bases. UV radiation: causes pyrimidine dimers (T-T or C-T bonds on same strand) → blocks replication → cell death or mutation if bypassed by special polymerases."},
+  {q:"What are the four types of DNA repair and what does each fix?", a:"1. Mismatch repair: fixes replication errors — mismatched base pairs and strand slippage loops. Uses methylation of GATC to distinguish new (unmethylated) from template (methylated) strand. 2. Direct repair: directly reverses damage without removing nucleotides. Example: methylguanine DNA methyltransferase removes methyl group from methylated guanine. Also fixes pyrimidine dimers. 3. Base excision repair: removes abnormal/modified bases. DNA glycosylase removes damaged base → AP site → AP endonuclease cleaves phosphodiester bond → polymerase fills in → ligase seals. 4. Nucleotide excision repair: removes a whole STRING of nucleotides around helix-distorting damage. Same end steps as base excision."},
+  {q:"How is a double-strand break repaired?", a:"Three main approaches: 1. Nonhomologous end joining (NHEJ): broken ends are simply joined together — fast but error-prone; can cause small deletions at the junction. 2. Homology-directed repair (HDR): uses the homologous chromosome as a template. The broken strand invades the homolog, uses it as a template to fill in the gap, then the other strand is filled in using the newly repaired strand or the homolog. 3. DNA damage bypass: replication stalls at a gap, then resumes on the other side; corresponding portion of the sister strand is excised and inserted into the gap; DNA polymerase fills the new gap."},
+],
+
+};
+
+// ─── State ───────────────────────────────────────────────────────
+let currentLecture = Object.keys(LECTURES)[0];
+let currentChunk = 0;
+let chunkDeck = [];
+let idx = 0;
+let flipped = false;
+let known = {};
+let stillStudying = {};
+let unlockedChunks = {}; // {lectureKey: maxUnlockedChunkIndex}
+
+function getUnlocked(lec) {
+  return unlockedChunks[lec] !== undefined ? unlockedChunks[lec] : 0;
+}
+
+function numChunks(lec) {
+  return Math.ceil(LECTURES[lec].length / CHUNK_SIZE);
+}
+
+function getChunk(lec, ci) {
+  const all = LECTURES[lec];
+  return all.slice(ci * CHUNK_SIZE, ci * CHUNK_SIZE + CHUNK_SIZE).map((c, i) => ({
+    ...c, id: lec + '__' + (ci * CHUNK_SIZE + i)
+  }));
+}
+
+function totalCards() {
+  return Object.values(LECTURES).reduce((s, a) => s + a.length, 0);
+}
+
+function chunkMastered(lec, ci) {
+  const cards = getChunk(lec, ci);
+  return cards.every(c => known[c.id]);
+}
+
+// ─── Unlock logic ─────────────────────────────────────────────────
+function tryUnlockNext() {
+  if (chunkMastered(currentLecture, currentChunk)) {
+    const next = currentChunk + 1;
+    const nc = numChunks(currentLecture);
+    if (next < nc && getUnlocked(currentLecture) < next) {
+      unlockedChunks[currentLecture] = next;
+    }
+  }
+}
+
+// ─── Render helpers ───────────────────────────────────────────────
+function updateStats() {
+  const k = chunkDeck.filter(c => known[c.id]).length;
+  const s = chunkDeck.filter(c => stillStudying[c.id]).length;
+  document.getElementById('s-total').textContent = chunkDeck.length;
+  document.getElementById('s-know').textContent = k;
+  document.getElementById('s-study').textContent = s;
+  const reviewed = chunkDeck.filter(c => known[c.id] || stillStudying[c.id]).length;
+  document.getElementById('prog-bar').style.width = chunkDeck.length ? Math.round(reviewed / chunkDeck.length * 100) + '%' : '0%';
+}
+
+function renderDots() {
+  const row = document.getElementById('dot-row');
+  row.innerHTML = '';
+  chunkDeck.forEach((c, i) => {
+    const d = document.createElement('div');
+    let cls = 'dot';
+    if (i === idx) cls += ' current';
+    else if (known[c.id]) cls += ' know';
+    else if (stillStudying[c.id]) cls += ' seen';
+    d.className = cls;
+    row.appendChild(d);
+  });
+}
+
+function renderChunkPills() {
+  const pills = document.getElementById('chunk-pills');
+  pills.innerHTML = '';
+  const nc = numChunks(currentLecture);
+  const unlocked = getUnlocked(currentLecture);
+
+  for (let ci = 0; ci < nc; ci++) {
+    const pill = document.createElement('button');
+    const isLocked = ci > unlocked;
+    const isDone = chunkMastered(currentLecture, ci);
+    const isActive = ci === currentChunk;
+
+    const start = ci * CHUNK_SIZE + 1;
+    const end = Math.min((ci + 1) * CHUNK_SIZE, LECTURES[currentLecture].length);
+    const label = `${start}–${end}`;
+
+    if (isLocked) {
+      pill.className = 'chunk-pill locked';
+      pill.innerHTML = `<span class="lock-icon">🔒</span> ${label}`;
+    } else if (isDone) {
+      pill.className = 'chunk-pill done' + (isActive ? ' active' : '');
+      pill.innerHTML = `<span class="pill-dot"></span> ${label} ✓`;
+    } else {
+      pill.className = 'chunk-pill' + (isActive ? ' active' : '');
+      pill.innerHTML = `<span class="pill-dot"></span> ${label}`;
+    }
+
+    if (!isLocked) {
+      pill.onclick = () => loadChunk(currentLecture, ci);
+    }
+    pills.appendChild(pill);
+  }
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  Object.keys(LECTURES).forEach(lec => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (lec === currentLecture ? ' active' : '');
+    btn.textContent = lec + ' (' + LECTURES[lec].length + ')';
+    btn.onclick = () => loadLecture(lec);
+    tabs.appendChild(btn);
+  });
+}
+
+function renderCard() {
+  const cont = document.getElementById('main-content');
+  const card = chunkDeck[idx];
+  const isKnown = !!known[card.id];
+  const isStudying = !!stillStudying[card.id];
+
+  cont.innerHTML = `
+    <div class="nav-row">
+      <button class="nav-btn" id="prev-btn" ${idx === 0 ? 'disabled' : ''}>← Prev</button>
+      <span class="card-progress">${idx + 1} of ${chunkDeck.length}</span>
+      <button class="nav-btn shuffle" id="shuf-btn">⇄ Shuffle</button>
+      <button class="nav-btn" id="next-btn" ${idx === chunkDeck.length - 1 ? 'disabled' : ''}>Next →</button>
+    </div>
+    <div class="card-area">
+      <div class="flashcard" id="fc">
+        <div class="card-face card-front">
+          <div class="card-tag">Question — click to flip</div>
+          <div class="card-q">${card.q}</div>
+          <div class="tap-hint">Click anywhere on this card to reveal the answer</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-tag">Answer</div>
+          <div class="card-a">${card.a}</div>
+        </div>
+      </div>
+    </div>
+    <div class="feedback-row">
+      <button class="fb-btn fb-know${isKnown ? ' marked' : ''}" id="know-btn">✓ Know it${isKnown ? ' ✓' : ''}</button>
+      <button class="fb-btn fb-still${isStudying ? ' marked' : ''}" id="still-btn">↺ Still studying${isStudying ? ' ✓' : ''}</button>
+    </div>
+  `;
+
+  document.getElementById('fc').onclick = () => {
+    flipped = !flipped;
+    document.getElementById('fc').classList.toggle('flipped', flipped);
+  };
+  document.getElementById('prev-btn').onclick = () => { idx--; flipped = false; render(); };
+  document.getElementById('next-btn').onclick = () => { idx++; flipped = false; render(); };
+  document.getElementById('shuf-btn').onclick = () => {
+    shuffle(chunkDeck); idx = 0; flipped = false; render();
+  };
+  document.getElementById('know-btn').onclick = () => {
+    known[card.id] = true; delete stillStudying[card.id];
+    tryUnlockNext();
+    if (idx < chunkDeck.length - 1) { idx++; flipped = false; }
+    render();
+  };
+  document.getElementById('still-btn').onclick = () => {
+    stillStudying[card.id] = true; delete known[card.id];
+    if (idx < chunkDeck.length - 1) { idx++; flipped = false; }
+    render();
+  };
+}
+
+function renderChunkComplete() {
+  const cont = document.getElementById('main-content');
+  const nc = numChunks(currentLecture);
+  const hasNext = currentChunk + 1 < nc;
+  const stillStudyingCards = chunkDeck.filter(c => stillStudying[c.id]);
+
+  cont.innerHTML = `
+    <div class="chunk-complete">
+      <h3>🎉 Chunk ${currentChunk + 1} complete!</h3>
+      <p>You've marked all ${chunkDeck.length} cards as "Know it."${hasNext ? ' The next chunk is now unlocked.' : ' That\'s the whole lecture!'}</p>
+      <div class="chunk-complete-btns">
+        <button class="cc-btn secondary" id="redo-btn">↺ Redo this chunk</button>
+        ${stillStudyingCards.length > 0 ? `<button class="cc-btn secondary" id="review-btn">Review ${stillStudyingCards.length} still studying</button>` : ''}
+        ${hasNext ? `<button class="cc-btn primary" id="next-chunk-btn">Next chunk →</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('redo-btn').onclick = () => {
+    chunkDeck.forEach(c => { delete known[c.id]; delete stillStudying[c.id]; });
+    idx = 0; flipped = false; render();
+  };
+  if (stillStudyingCards.length > 0) {
+    document.getElementById('review-btn').onclick = () => {
+      chunkDeck = stillStudyingCards;
+      idx = 0; flipped = false; render();
+    };
+  }
+  if (hasNext) {
+    document.getElementById('next-chunk-btn').onclick = () => {
+      loadChunk(currentLecture, currentChunk + 1);
+    };
+  }
+}
+
+function render() {
+  renderTabs();
+  renderChunkPills();
+  updateStats();
+  renderDots();
+
+  // Check if whole chunk is mastered
+  if (chunkDeck.length > 0 && chunkDeck.every(c => known[c.id])) {
+    renderChunkComplete();
+  } else {
+    renderCard();
+  }
+}
+
+// ─── Load functions ───────────────────────────────────────────────
+function loadChunk(lec, ci) {
+  currentChunk = ci;
+  chunkDeck = getChunk(lec, ci);
+  idx = 0; flipped = false;
+  render();
+}
+
+function loadLecture(lec) {
+  currentLecture = lec;
+  if (unlockedChunks[lec] === undefined) unlockedChunks[lec] = 0;
+  loadChunk(lec, 0);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────
+document.getElementById('hdr-sub').textContent = Object.keys(LECTURES).length + ' Lectures · ' + totalCards() + ' Cards · Learn 5 at a time';
+loadLecture(currentLecture);
+</script>
+</body>
+</html>
